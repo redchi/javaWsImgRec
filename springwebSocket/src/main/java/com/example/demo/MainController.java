@@ -70,6 +70,7 @@ public class MainController {
 
 	private byte[] latestImage;
 	private String type;
+	private int yee;
 
 	private Predictor<Image, DetectedObjects> predictor;
 
