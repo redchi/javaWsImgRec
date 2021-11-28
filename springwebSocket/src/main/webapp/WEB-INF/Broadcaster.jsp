@@ -1,7 +1,7 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-    pageEncoding="ISO-8859-1"%>
-<!DOCTYPE html>
-<html lang="en">
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1" %>
+  <!DOCTYPE html>
+  <html lang="en">
+
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -12,43 +12,48 @@
 
     <title>Document</title>
   </head>
+
   <body>
-      <h2>sending data yo</h2>
-        <video></video>
-      <br>
-      <button onclick='init();'>start webcam</button>
+    <h2>sending data yo</h2>
+    <video></video>
     <br>
-      <br>
-    <button id = "startB"disabled>take a snapshot</button>
-  
-</br>
-</br>
-<button onclick='sockJsConnect();'>SockJs Connect</button>
-</br>
+    <button id="start" onclick='init();'>start webcam</button>
+    <br>
+    <br>
+    <button id="sockJsCon" onclick='sockJsConnect();' disabled>SockJs Connect</button>
+    <br>
+    <br>
+    <button id="startB" disabled>take a snapshot</button>
+    <br>
+    <br>
+
 
   </body>
   <script>
-    const url = "http://localhost:8080";
+    const url = " ";
     const vid = document.querySelector("video");
     const fps = 2;
 
-    function init(){
-    navigator.mediaDevices
-      .getUserMedia({ video: true }) // request cam
-      .then((stream) => {
-        vid.srcObject = stream; // don't use createObjectURL(MediaStream)
-        return vid.play(); // returns a Promise
-      })
-      .then(() => {
-        // enable the button
-        const btn = document.getElementById("startB");
-        btn.disabled = false;
-        btn.onclick = (e) => {
-          setInterval(() => {
-            takeASnap().then(download);
-          }, 1000 / fps);
-        };
-      });
+    function init() {
+      navigator.mediaDevices
+        .getUserMedia({ video: true }) // request cam
+        .then((stream) => {
+          vid.srcObject = stream; // don't use createObjectURL(MediaStream)
+          return vid.play(); // returns a Promise
+        })
+        .then(() => {
+          document.getElementById("start").disabled = true;
+          // enable the button
+          var btn = document.getElementById("sockJsCon");
+          btn.disabled = false;
+          btn = document.getElementById("startB");
+          btn.onclick = (e) => {
+            document.getElementById("startB").disabled = true;
+            setInterval(() => {
+              takeASnap().then(download);
+            }, 1000 / fps);
+          };
+        });
     }
 
 
@@ -65,46 +70,25 @@
     function download(blob) {
       // uses the <a download> to download a Blob
       console.log(blob);
-      //   let a = document.createElement("a");
-      //   a.href = URL.createObjectURL(blob);
-      //   a.download = "screenshot.jpg";
-      //   document.body.appendChild(a);
-      //   a.click();
+      console.log(stompClient);
 
-    //   var fd = new FormData();
-    //   fd.append("image", blob);
-    //   console.log(fd);
-    //   $.ajax({
-    //     url: url + "/dataUpload",
-    //     data: fd,
-    //     processData: false,
-    //     contentType: false,
-    //     type: "POST",
-    //     success: function (data) {
-    //       alert(data);
-    //     },
-    //   });
-      //  console.log(JSON.stringify(blob));
-        console.log(stompClient);
-
-    var res;
+      var res;
       var reader = new FileReader();
-            reader.readAsDataURL(blob); 
-            //async
-        reader.onloadend = function() {
-        var base64data = reader.result;                
+      reader.readAsDataURL(blob);
+      //async
+      reader.onloadend = function () {
+        var base64data = reader.result;
         res = base64data.split(",")[1];
         stompClient.send("/app/uploadImg", {}, res);
-        }     
-        
+      }
     }
 
 
-  
+
 
     var socket;
     var stompClient;
-    
+
     function sockJsConnect() {
       socket = new SockJS(url + "/ImgReg");
       stompClient = Stomp.over(socket);
@@ -114,7 +98,7 @@
         });
 
         stompClient.subscribe("/topic/ImgReceivers", (msg) => {
-        //  console.log("server msg: " + msg.body);
+          //  console.log("server msg: " + msg.body);
         });
 
         stompClient.send(
@@ -124,7 +108,11 @@
         );
         stompClient.send("/app/greeting", {}, JSON.stringify({ name: "josh" }));
       });
+      document.getElementById("sockJsCon").disabled = true;
+      const btn = document.getElementById("startB");
+      btn.disabled = false;
     }
   </script>
-</html>
-    
+
+
+  </html>

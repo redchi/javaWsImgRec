@@ -121,6 +121,7 @@ public class MainController {
 	public synchronized String process(String blob) throws InterruptedException, IOException, TranslateException {
 		long start =System.currentTimeMillis();
 
+		System.out.println("#1 "+System.currentTimeMillis());
 		System.out.println("size in 1 - "+ blob.getBytes().length);
 		
 		byte[] byteArr = Base64.getDecoder().decode(blob);
