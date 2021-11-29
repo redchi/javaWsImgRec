@@ -39,36 +39,42 @@ public class OD2 {
 	}
 	
 	public static void t1() throws TranslateException, IOException, ModelNotFoundException, MalformedModelException {
-		System.out.println(System.currentTimeMillis());
+		System.out.println("#1 " +System.currentTimeMillis());
 		Path imageFile = Paths.get("src/test/resources/dog_bike_car.jpg");
         Image img = ImageFactory.getInstance().fromFile(imageFile);
-		
+        System.out.println("#2 " +System.currentTimeMillis());
 		Translator<Image, DetectedObjects> translator = SingleShotDetectionTranslator.builder()
 	            .addTransform(new ToTensor())
 	            .optSynsetUrl("https://mysynset.txt")
 	            .build();
 		
-		
+        System.out.println("#3 "  +System.currentTimeMillis());
+
 		Criteria<Image,DetectedObjects> crit = Criteria.builder()
 				.setTypes(Image.class, DetectedObjects.class)
 				.optApplication(Application.CV.OBJECT_DETECTION)
 				  .optArtifactId("ssd")
 				    .optProgress(new ProgressBar())
 				.build();
+        System.out.println("#4 " +System.currentTimeMillis());
+
 		ZooModel<Image, DetectedObjects> model = ModelZoo.loadModel(crit);
 		Predictor<Image, DetectedObjects> predictor = model.newPredictor();
+        System.out.println("#4 " +System.currentTimeMillis());
 		DetectedObjects objects =  predictor.predict(img);
 		for(Classification object:objects.items()) {
 			System.out.println(object);
 		}
-		
+		System.out.println("#5 " +System.currentTimeMillis());
+
 		String type ="png";
 		
 		img.drawBoundingBoxes(objects);
 		ByteArrayOutputStream out1 = new ByteArrayOutputStream();
 		img.save(out1, type);
 		
-		
+		System.out.println("#6 " +System.currentTimeMillis());
+
 		System.out.println(System.currentTimeMillis());
 		InputStream in = new ByteArrayInputStream(out1.toByteArray());
 		//BufferedImage newBi = ImageIO.read(in);
@@ -86,7 +92,7 @@ public class OD2 {
         result.createGraphics().drawImage(image, 0, 0, Color.WHITE, null);
         ImageIO.write(result, "jpg", output);
 		
-    	System.out.println(System.currentTimeMillis());
+		System.out.println("#7 " +System.currentTimeMillis());
 		System.out.println("here");
 	}
 	

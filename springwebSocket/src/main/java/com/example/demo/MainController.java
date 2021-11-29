@@ -35,6 +35,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.example.demo.multi.ImageData;
+import com.example.demo.multi.ImageProcessHandler;
 import com.pngencoder.PngEncoder;
 
 import ai.djl.Application;
@@ -67,6 +69,9 @@ public class MainController {
 
 	@Autowired
 	private SimpMessagingTemplate broker;
+
+	@Autowired
+	private ImageProcessHandler imageProcessHandler;
 
 	private byte[] latestImage;
 	private String type;
@@ -108,7 +113,6 @@ public class MainController {
 //
 //		}
 
-
 //	@MessageMapping("/uploadImg")
 //	@SendTo("/topic/ImgReceivers")
 //	public String process(String blob) throws InterruptedException {
@@ -117,44 +121,13 @@ public class MainController {
 //	}
 
 	@MessageMapping("/uploadImg")
-	@SendTo("/topic/ImgReceivers")
-	public synchronized String process(String blob) throws InterruptedException, IOException, TranslateException {
-		long start =System.currentTimeMillis();
-
-		System.out.println("#1 "+System.currentTimeMillis());
-		System.out.println("size in 1 - "+ blob.getBytes().length);
-		
-		byte[] byteArr = Base64.getDecoder().decode(blob);
-	//	System.out.println("size in 2 - "+ byteArr.length);
-		
-		
-
-		InputStream is = new ByteArrayInputStream(byteArr);
-		Image img = ImageFactory.getInstance().fromInputStream(is);
-		DetectedObjects objects = predictor.predict(img);
-		img.drawBoundingBoxes(objects);
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		img.save(out, "png");
-		
-		
-	//	byte[] data = out.toByteArray();
-		//System.out.println("size out 1 - "+ out.toByteArray().length);
-		
-	//	byte [] res = byteArr;
-		byte [] res = addWaterMark(out);
-//		byte [] res = out.toByteArray();
-//		System.out.println("size out 0 - "+ res.length);
-
-		
-		
-
-		String encoded = Base64.getEncoder().encodeToString(res);
-		System.out.println("size out 2 - "+ encoded.getBytes().length);
-		System.out.println("Time taken  "+ (System.currentTimeMillis() - start) + " ");
-
-		System.out.println("");
-		return encoded;
-		//return "someone sent a blob with - " + blob.getBytes().length;
+	public synchronized void process(String blob) throws InterruptedException, IOException, TranslateException {
+		if (imageProcessHandler.isBusy() == false) {
+			ImageData iData = new ImageData();
+			iData.setB64Data(blob);
+			iData.setTimeStamp(System.currentTimeMillis());
+			imageProcessHandler.ProcessImage(iData);
+		}
 	}
 
 	@MessageMapping("/greeting")
@@ -164,22 +137,21 @@ public class MainController {
 		return msg.name + " says hello";
 	}
 
-	
 	@RequestMapping("/")
 	public ModelAndView home() {
 		return new ModelAndView("home");
 	}
-	
+
 	@RequestMapping("/r")
 	public ModelAndView home1() {
 		return new ModelAndView("Receiver");
 	}
-	
+
 	@RequestMapping("/b")
 	public ModelAndView home2() {
 		return new ModelAndView("Broadcaster");
 	}
-	
+
 	@RequestMapping("/testWebcam")
 	public ModelAndView home3() {
 		return new ModelAndView("webcamTest");
@@ -203,7 +175,6 @@ public class MainController {
 		broker.convertAndSend("/topic/greeting", "blob size = " + blob.getSize());
 		return "blob size = " + blob.getSize();
 	}
-
 
 	@RequestMapping(value = "/latestImg2")
 	@CrossOrigin(origins = "*", allowedHeaders = "*", originPatterns = "*")
@@ -238,15 +209,15 @@ public class MainController {
 //        String path = repositoryService.findVideoLocationById(id);
 //        return new FileSystemResource(path);
 //    }
-	
-	
+
 	private byte[] addWaterMark(ByteArrayOutputStream out) throws IOException {
 		ByteArrayInputStream input = new ByteArrayInputStream(out.toByteArray());
 		BufferedImage image = ImageIO.read(input);
 		int height = 50;
 		int y = image.getHeight() + height / 2;
 
-		BufferedImage newImage = new BufferedImage(image.getWidth(), (image.getHeight()) + height, BufferedImage.TYPE_INT_RGB);
+		BufferedImage newImage = new BufferedImage(image.getWidth(), (image.getHeight()) + height,
+				BufferedImage.TYPE_INT_RGB);
 		Graphics g = newImage.getGraphics();
 
 		g.setColor(Color.black);
