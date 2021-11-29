@@ -10,10 +10,12 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -35,6 +37,9 @@ import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
+
+import static java.util.stream.Collectors.toList;
+
 
 class ImageProcessTask implements Runnable {
 
@@ -81,27 +86,27 @@ public class ImageProcessHandler {
 
 	}
 
-	@Scheduled(fixedRate = 100)
-	public void checkRequests() {
-		synchronized (allRequests) {
-			int requestMaxSize = 5;
-			AtomicInteger count = new AtomicInteger();
-			if (allRequests.size() > requestMaxSize) {
-				List<ImageData> newlist = allRequests.stream()
-						.sorted(Comparator.comparingLong((ImageData img) -> (img.getTimeStamp())).reversed())
-						.filter((i) -> {
-							if (count.get() < requestMaxSize) {
-								count.set(count.get() + 1);
-								return true;
-							}
-							return false;
-						}).toList();
-				allRequests.clear();
-				allRequests = newlist;
-			}
-
-		}
-	}
+//	@Scheduled(fixedRate = 100)
+//	public void checkRequests() {
+//		synchronized (allRequests) {
+//			int requestMaxSize = 5;
+//			AtomicInteger count = new AtomicInteger();
+//			if (allRequests.size() > requestMaxSize) {
+//				List<ImageData> newlist = allRequests.stream()
+//						.sorted(Comparator.comparingLong((ImageData img) -> (img.getTimeStamp())).reversed())
+//						.filter((i) -> {
+//							if (count.get() < requestMaxSize) {
+//								count.set(count.get() + 1);
+//								return true;
+//							}
+//							return false;
+//						}).collect(Collectors.toList());
+//				allRequests.clear();
+//				allRequests = newlist;
+//			}
+//
+//		}
+//	}
 
 	public synchronized void ProcessImage(ImageData imgData) throws IOException, TranslateException {
 		isBusy = true;
